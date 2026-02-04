@@ -2,17 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>cserve test</title>
+    <title>cserve — Static File Server</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>cserve is running</h1>
-    <p>This page is being served by a C web server.</p>
+<header>
+    <h1>cserve</h1>
+    <p class="tagline">A minimal static file server written in C</p>
+</header>
 
-    <button id="btn">Click me</button>
-    <p id="output"></p>
+<section>
+    <h2>What is this?</h2>
+    <p>
+        <strong>cserve</strong> is a lightweight HTTP static file server written in pure C for Windows.
+        It serves HTML, CSS, and JavaScript files from a directory using a single executable.
+    </p>
+</section>
 
-    <script src="script.js"></script>
+<section>
+    <h2>Quick start</h2>
+    <pre><code>cserve public</code></pre>
+
+    <p>Custom port:</p>
+    <pre><code>cserve public -p 3000</code></pre>
+</section>
+
+<section>
+    <h2>Folder structure</h2>
+    <pre><code>public/
+├── index.html
+├── style.css
+└── script.js
+</code></pre>
+</section>
+
+<section>
+    <h2>Features</h2>
+    <ul>
+        <li>Serves HTML, CSS, and JavaScript</li>
+        <li>No external dependencies</li>
+        <li>Configurable port</li>
+        <li>Native Windows executable</li>
+        <li>Optional GUI wrapper</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Security notes</h2>
+    <ul>
+        <li>Directory traversal (<code>..</code>) is blocked</li>
+        <li>Only static files are served</li>
+        <li>Intended for local development and learning</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Status check</h2>
+    <p id="status">
+        If you can read this page, the server is running correctly.
+    </p>
+    <button id="btn">Test JavaScript</button>
+</section>
+
+<footer>
+    <p>
+        Built with C · Winsock · Win32  
+    </p>
+</footer>
+
+<script src="script.js"></script>
 </body>
 </html>

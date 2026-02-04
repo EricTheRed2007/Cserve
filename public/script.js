@@ -1,4 +1,4 @@
 document.getElementById("btn").addEventListener("click", () => {
-    document.getElementById("output").textContent =
-        "JavaScript served correctly";
+    document.getElementById("status").textContent =
+        "JavaScript loaded successfully";
 });
