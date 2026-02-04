@@ -1,5 +1,7 @@
 #define _WIN32_WINNT 0x0601
 
+#include <string.h>
+#include <stdlib.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
@@ -7,7 +9,7 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
-#define PORT 8080
+
 #define BUF_SIZE 4096
 
 const char* get_mime_type(const char *path) {
@@ -68,11 +70,31 @@ void serve_file(SOCKET client, const char *root, const char *url_path) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("Usage: %s <folder>\n", argv[0]);
+    int PORT = 8080;
+    char *folder = NULL;
+
+    if (argc < 2) {
+        printf("Usage: %s <folder> [-p port]\n", argv[0]);
         return 1;
     }
 
+    for (int i = 2; i < argc; i++) {
+        if (strcmp(argv[i], "-p") == 0) {
+            if (i + 1 < argc) {
+                PORT = atoi(argv[i + 1]);
+                i++;  
+            } else {
+                printf("Error: -p requires a port number\n");
+                return 1;
+            }
+        }
+    }
+
+    if (PORT <= 0 || PORT > 65535) {
+        printf("Invalid port number\n");
+        return 1;
+    }
+    
     char root[MAX_PATH];
     GetFullPathNameA(argv[1], MAX_PATH, root, NULL);
 
