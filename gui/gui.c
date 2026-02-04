@@ -1,5 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
+#include <shlobj.h>
 #include <stdio.h>
 
 #define ID_FOLDER   101
@@ -7,18 +9,18 @@
 #define ID_START    103
 #define ID_STOP     104
 #define ID_STATUS   105
-
-PROCESS_INFORMATION serverProc = {0};
+#define ID_BROWSE   106
 
 HWND hFolder, hPort, hStart, hStop, hStatus;
 HFONT hFont;
-
-void set_status(const char *text) {
-    SetWindowText(hStatus, text);
-}
+PROCESS_INFORMATION serverProc = {0};
 
 void apply_font(HWND h) {
     SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+}
+
+void set_status(const char *text) {
+    SetWindowText(hStatus, text);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -46,6 +48,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             90, 20, 260, 24,
             hwnd, (HMENU)ID_FOLDER, NULL, NULL);
 
+        CreateWindow("BUTTON", "Browse...",
+            WS_VISIBLE | WS_CHILD,
+            360, 20, 80, 24,
+            hwnd, (HMENU)ID_BROWSE, NULL, NULL);
+
         CreateWindow("STATIC", "Port:",
             WS_VISIBLE | WS_CHILD,
             20, 60, 60, 24,
@@ -58,17 +65,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         hStart = CreateWindow("BUTTON", "Start Server",
             WS_VISIBLE | WS_CHILD,
-            90, 100, 120, 32,
+            90, 100, 140, 32,
             hwnd, (HMENU)ID_START, NULL, NULL);
 
         hStop = CreateWindow("BUTTON", "Stop Server",
             WS_VISIBLE | WS_CHILD | WS_DISABLED,
-            230, 100, 120, 32,
+            260, 100, 140, 32,
             hwnd, (HMENU)ID_STOP, NULL, NULL);
 
         hStatus = CreateWindow("STATIC", "Status: Stopped",
             WS_VISIBLE | WS_CHILD,
-            20, 150, 360, 24,
+            20, 150, 420, 24,
             hwnd, (HMENU)ID_STATUS, NULL, NULL);
 
         apply_font(hFolder);
@@ -76,12 +83,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         apply_font(hStart);
         apply_font(hStop);
         apply_font(hStatus);
+        apply_font(GetDlgItem(hwnd, ID_BROWSE));
 
         break;
     }
 
     case WM_COMMAND: {
         switch (LOWORD(wParam)) {
+
+        case ID_BROWSE: {
+            BROWSEINFO bi = {0};
+            bi.lpszTitle = "Select folder to serve";
+            bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+
+            LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
+            if (pidl) {
+                char path[MAX_PATH];
+                if (SHGetPathFromIDList(pidl, path)) {
+                    SetWindowText(hFolder, path);
+                }
+                CoTaskMemFree(pidl);
+            }
+            break;
+        }
 
         case ID_START:
             if (serverProc.hProcess == NULL) {
@@ -91,6 +115,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 GetWindowText(hFolder, folder, MAX_PATH);
                 GetWindowText(hPort, port, sizeof(port));
+
+                if (folder[0] == '\0') {
+                    MessageBox(hwnd, "Please select a folder.", "Error", MB_OK | MB_ICONERROR);
+                    break;
+                }
 
                 snprintf(cmd, sizeof(cmd),
                     "server.exe \"%s\" -p %s",
@@ -112,6 +141,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     snprintf(status, sizeof(status),
                         "Status: Running on port %s", port);
                     set_status(status);
+                } else {
+                    MessageBox(hwnd, "Failed to start server.exe", "Error", MB_OK | MB_ICONERROR);
                 }
             }
             break;
@@ -146,8 +177,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow)
- {
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow) {
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInst;
@@ -160,7 +190,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
         "cserve_gui",
         "cserve – Static Server",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-        300, 200, 420, 240,
+        300, 200, 470, 240,
         NULL, NULL, hInst, NULL
     );
 
